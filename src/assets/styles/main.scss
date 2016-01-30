@@ -1,0 +1,50 @@
+// includes
+@import 'boilerplate';
+
+// tags
+body {
+	background: $lightest;
+	color: $darkest;
+	font: 15px/1.2 'Roboto', Helvetica, Arial, sans-serif;
+	
+	display: flex;
+	flex-direction: column;
+}
+header {
+	display: flex;
+}
+body > div {
+	flex: 1;
+	display: flex;
+	justify-content: center;
+	background-color: #444;
+	padding: 20px;
+}
+body > div > div {
+	overflow: auto;
+}
+#main {
+	position: relative;
+}
+#iframe {
+	background-color: #FFF;
+	pointer-events: none;
+}
+#pointer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+.click {
+	position: absolute;
+	width: 40px;
+	height: 40px;
+	background: radial-gradient(circle, rgba(0,255,0,1) 2px, rgba(0,255,0,.25) 2px, transparent);
+	margin-top: -20px;
+	margin-left: -20px;
+	border-radius: 50%;
+	z-index: 2;
+	pointer-events: none;
+}
