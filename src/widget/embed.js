@@ -1,7 +1,35 @@
 (function () {
-	
+	// get userId
 	var userId = document.currentScript.src.match(/userId\=([^&]*)(&|$)/)[1];
 	if ( ! userId) return;
+	
+	// helpers
+	function httpGetAsync(theUrl, callback) {
+		var xmlHttp = new XMLHttpRequest();
+		xmlHttp.onreadystatechange = function() {
+			if (xmlHttp.readyState == 4 && xmlHttp.status == 200) callback(xmlHttp.responseText);
+		}
+		xmlHttp.open("GET", theUrl, true);
+		xmlHttp.send(null);
+	}
+	
+	// set base url
+	var base = document.querySelector('base');
+	base = base && base.href || '';
+	
+	// inline external stylesheets
+	for(var i = 0, links = document.getElementsByTagName('link'); i < links.length; i++) {
+		if (links[i].rel === 'stylesheet') {
+			var link = links[i]
+			//if (link.href.indexOf(base) === 0) { // it is a local resource
+				var style = document.createElement('style');
+				httpGetAsync(link.href, function (responseText) {
+					style.appendChild(document.createTextNode(responseText));
+				});
+				link.parentNode.replaceChild(style, link);
+			//}
+		}
+	}
 	
 	// load dependencies
 	var deferreds = [];
@@ -25,13 +53,12 @@
 			var firebase = new Firebase('https://session-replay.firebaseio.com/users/' + userId);
 			
 			// initialize a session
-			var base = document.querySelector('base');
 			var sessionRef = firebase.child('sessions').push({
 				width: window.innerWidth || null,
 				height: window.innerHeight || null,
 				userAgent: navigator.userAgent || null,
 				url: window.location.href || null,
-				base: base && base.href || null,
+				base: base || null,
 				createdAt: new Date().toISOString(),
 			});
 			var messagesRef = firebase.child('messages/' + sessionRef.key());

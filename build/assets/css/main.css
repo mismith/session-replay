@@ -526,6 +526,17 @@ body {
 header {
   display: -webkit-flex;
   display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+          flex-direction: column; }
+  header aside {
+    max-height: 100px;
+    overflow: auto; }
+
+nav {
+  display: -webkit-flex;
+  display: -ms-flexbox;
   display: flex; }
 
 body > div {
@@ -544,10 +555,15 @@ body > div {
 body > div > div {
   overflow: auto; }
 
-#main {
+table {
+  width: 100%; }
+  table tr td {
+    white-space: nowrap; }
+
+main {
   position: relative; }
 
-#iframe {
+iframe {
   background-color: #FFF;
   pointer-events: none; }
 

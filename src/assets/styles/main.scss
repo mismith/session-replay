@@ -12,6 +12,15 @@ body {
 }
 header {
 	display: flex;
+	flex-direction: column;
+	
+	aside {
+		max-height: 100px;
+		overflow: auto;
+	}
+}
+nav {
+	display: flex;
 }
 body > div {
 	flex: 1;
@@ -23,10 +32,19 @@ body > div {
 body > div > div {
 	overflow: auto;
 }
-#main {
+table {
+	width: 100%;
+	
+	tr {
+		td {
+			white-space: nowrap;
+		}
+	}
+}
+main {
 	position: relative;
 }
-#iframe {
+iframe {
 	background-color: #FFF;
 	pointer-events: none;
 }

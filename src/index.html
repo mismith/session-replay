@@ -37,20 +37,20 @@
 <body>
 
 	<header>
+		<aside>
+			<table id="table"></table>
+		</aside>
 		<nav>
-			<button onclick="play()">Play/Pause</button>
+			<button id="button" onclick="play()"><i class="fa fa-play"></i></button>
+			<div style="flex-grow: 1; text-align: right;">
+				<progress id="progress" min="0" value="0" style="width: 100%;"></progress>
+			</div>
 		</nav>
-		<div style="flex-grow: 1; text-align: right;">
-			<progress id="progress" min="0" value="0" style="width: 100%;"></progress>
-		</div>
-		<div>
-			<select id="select"></select>
-		</div>
 	</header>
 	<div>
 		<div>
 			<main id="main">
-				<iframe id="iframe" frameborder="0"></iframe>
+				<iframe frameborder="0"></iframe>
 				<div id="pointer">
 					<svg width="15" viewBox="0 0 12.0098 17.8095">
 						<polygon points="4.1251,11.0742 0.2501,14.3916 0.2501,0.562 11.3595,10.585 6.3683,10.585 9.6437,16.3174 7.609,17.4678" style="fill: red; stroke: white; stroke-width: 1px; "/>
@@ -66,10 +66,11 @@
 	<script src="https://cdn.rawgit.com/rafaelw/mutation-summary/master/util/tree-mirror.js"></script>
 	<script>
 		 (function () {
-			var iframe = document.getElementById('iframe'),
-				pointer = document.getElementById('pointer'),
-				progress = document.getElementById('progress'),
-				select = document.getElementById('select');
+			var iframe = document.querySelector('iframe'),
+				pointer = document.querySelector('#pointer'),
+				progress = document.querySelector('progress'),
+				table = document.querySelector('table'),
+				button = document.querySelector('button');
 			
 			var BASE_URL;
 			
@@ -121,7 +122,7 @@
 							click.className = 'click';
 							click.style.left = msg.x + 'px';
 							click.style.top = msg.y + 'px';
-							document.getElementById('main').appendChild(click);
+							document.querySelector('main').appendChild(click);
 						case 'mousemove':
 							pointer.style.left = msg.x + 'px';
 							pointer.style.top = msg.y + 'px';
@@ -168,9 +169,11 @@
 				if (playingSince) {
 					// pause
 					playingSince = false;
+					button.firstChild.className = 'fa fa-play';
 				} else {
 					// play
 					playingSince = +new Date() - progress.value;
+					button.firstChild.className = 'fa fa-pause';
 					
 					step();
 				}
@@ -232,13 +235,12 @@
 				sessionsRef.on('value', function (sessionsSnap) {
 					sessions = sessionsSnap.val() || {};
 					
-					// populate select box
-					emptyNode(select);
+					// populate user sessions
 					for(var sid in sessions) {
-						var option = document.createElement('option');
-						option.value = option.textContent = sid;
-						//option.selected = sid === sessionId;
-						select.insertBefore(option, select.firstChild);
+						var session = sessions[sid];
+						var row = document.createElement('tr');
+						row.innerHTML = '<td>' + sid + '</td><td>' + session.createdAt + '</td><td>' + session.url + '</td><td>' + session.userAgent + '</td>';
+						table.insertBefore(row, table.firstChild);
 					}
 					
 					loadSession(Object.keys(sessions).pop());
