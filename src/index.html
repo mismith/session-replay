@@ -44,7 +44,6 @@
 			<progress id="progress" min="0" value="0" style="width: 100%;"></progress>
 		</div>
 		<div>
-			<button onclick="login()">Login</button>
 			<select id="select"></select>
 		</div>
 	</header>
@@ -72,21 +71,34 @@
 				progress = document.getElementById('progress'),
 				select = document.getElementById('select');
 			
+			var BASE_URL = 'http://localhost:3000';
+			
 			// mutation processing
 			var mirror = new TreeMirror(iframe.contentWindow.document, {
 				 createElement: function(tagName) {
-					 if (tagName == 'SCRIPT') {
-						 var node = document.createElement('NO-SCRIPT');
-						 node.style.display = 'none';
-						 return node;
-					 }
-					 if (tagName === 'svg' || tagName === 'use') {
-						 return document.createElementNS('http://www.w3.org/2000/svg', tagName);
-					 }
+					switch (tagName.toLowerCase()) {
+						case 'head':
+							var head = document.createElement(tagName),
+								base = document.createElement('base');
+							base.href = BASE_URL;
+							head.appendChild(base);
+							return head;
+						case 'base':
+							// skip since we want to use our own base
+							return document.createElement('no-base');
+   						case 'script':
+							var node = document.createElement('no-script');
+							node.style.display = 'none';
+							return node;
+						case 'svg':
+						case 'use':
+							return document.createElementNS('http://www.w3.org/2000/svg', tagName);
+					}
 				 },
 				 setAttribute: function(node, name, value) {
-					 if (name === 'xlink:href') {
-						 return node.setAttributeNS('http://www.w3.org/1999/xlink', name, value);
+					 switch (name) {
+						 case 'xlink:href':
+						 	return node.setAttributeNS('http://www.w3.org/1999/xlink', name, value);
 					 }
 				 },
 			});
@@ -167,61 +179,70 @@
 			
 			var sessions = {};
 			var firebase = new Firebase('https://session-replay.firebaseio.com');
-			window.login = function login() {
-				firebase.authWithOAuthPopup('github', function (err, authData) {
-					if (err) return console.error(error);
-					
-					var userFirebase = firebase.child('users/' + authData.uid);
-					console.log(authData.uid);
-					
-					var sessionsRef = userFirebase.child('sessions'),
-						messagesRef = userFirebase.child('messages');
-					
-					function loadSession (sessionId) {
-						var session = sessions[sessionId];
+			function authThen(callback) {
+				var authData = firebase.getAuth();
+				
+				if (authData) {
+					callback(authData);
+				} else {
+					firebase.authWithOAuthPopup('github', function (err, authData) {
+						if (err) return console.error(error);
 						
-						// init iframe
-						emptyNode(iframe.contentWindow.document);
-						iframe.width = session.width;
-						iframe.height = session.height;
-						
-						// @TODO: remove old clicks
-						// @TODO: re-init mirror?
-						
-						var sessionRef = messagesRef.child(sessionId);
-						sessionRef.on('child_added', function (messageSnap) {
-							var message = messageSnap.val();
-							if ( ! message) return;
-							
-							if ( ! firstMsg) {
-								firstMsg = message;
-								handleMsg(firstMsg);
-							}
-							lastMsg = message;
-							progress.max = lastMsg.timestamp - firstMsg.timestamp;
-							
-							messages.push(message);
-						});
-						sessionRef.once('value', function () {
-							window.play();
-						});
-					}
-					sessionsRef.on('value', function (sessionsSnap) {
-						sessions = sessionsSnap.val() || {};
-						
-						// populate select box
-						emptyNode(select);
-						for(var sid in sessions) {
-							var option = document.createElement('option');
-							option.value = option.textContent = sid;
-							//option.selected = sid === sessionId;
-							select.insertBefore(option, select.firstChild);
-						}
-						
-						loadSession(Object.keys(sessions).pop());
+						callback(authData);
 					});
+				}
+			}
+			function initUser (authData) {
+				var userFirebase = firebase.child('users/' + authData.uid);
+				
+				var sessionsRef = userFirebase.child('sessions'),
+					messagesRef = userFirebase.child('messages');
+				
+				function loadSession (sessionId) {
+					var session = sessions[sessionId];
+					
+					// init iframe
+					emptyNode(iframe.contentWindow.document);
+					iframe.width = session.width;
+					iframe.height = session.height;
+					
+					// @TODO: remove old clicks
+					// @TODO: re-init mirror?
+					
+					var sessionRef = messagesRef.child(sessionId);
+					sessionRef.on('child_added', function (messageSnap) {
+						var message = messageSnap.val();
+						if ( ! message) return;
+						
+						if ( ! firstMsg) {
+							firstMsg = message;
+							handleMsg(firstMsg);
+						}
+						lastMsg = message;
+						progress.max = lastMsg.timestamp - firstMsg.timestamp;
+						
+						messages.push(message);
+					});
+					sessionRef.once('value', function () {
+						window.play();
+					});
+				}
+				sessionsRef.on('value', function (sessionsSnap) {
+					sessions = sessionsSnap.val() || {};
+					
+					// populate select box
+					emptyNode(select);
+					for(var sid in sessions) {
+						var option = document.createElement('option');
+						option.value = option.textContent = sid;
+						//option.selected = sid === sessionId;
+						select.insertBefore(option, select.firstChild);
+					}
+					
+					loadSession(Object.keys(sessions).pop());
 				});
 			}
+			authThen(initUser);
 			
 		 })();
 	</script>
