@@ -16,9 +16,7 @@
 			script.async = true;
 			document.head.appendChild(script);
 			
-			script.addEventListener('load', function () {
-				resolve();
-			});
+			script.addEventListener('load', resolve);
 		}));
 	});
 	Promise.all(deferreds).then(function () {
@@ -27,12 +25,13 @@
 			var firebase = new Firebase('https://session-replay.firebaseio.com/users/' + userId);
 			
 			// initialize a session
+			var base = document.querySelector('base');
 			var sessionRef = firebase.child('sessions').push({
 				width: window.innerWidth || null,
 				height: window.innerHeight || null,
 				userAgent: navigator.userAgent || null,
 				url: window.location.href || null,
-				base: document.getElementsByTagName('base')[0].href || null,
+				base: base && base.href || null,
 				createdAt: new Date().toISOString(),
 			});
 			var messagesRef = firebase.child('messages/' + sessionRef.key());

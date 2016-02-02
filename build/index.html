@@ -71,7 +71,7 @@
 				progress = document.getElementById('progress'),
 				select = document.getElementById('select');
 			
-			var BASE_URL = 'http://localhost:3000';
+			var BASE_URL;
 			
 			// mutation processing
 			var mirror = new TreeMirror(iframe.contentWindow.document, {
@@ -205,6 +205,8 @@
 					emptyNode(iframe.contentWindow.document);
 					iframe.width = session.width;
 					iframe.height = session.height;
+					BASE_URL = session.base || session.url;
+					
 					
 					// @TODO: remove old clicks
 					// @TODO: re-init mirror?
